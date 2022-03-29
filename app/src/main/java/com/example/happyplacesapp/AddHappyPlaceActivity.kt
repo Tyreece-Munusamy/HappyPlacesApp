@@ -39,7 +39,7 @@ class AddHappyPlaceActivity : AppCompatActivity() , View.OnClickListener {
 
         findViewById<androidx.appcompat.widget.AppCompatEditText>(R.id.et_date).setOnClickListener(this)
     }
-
+//boom
     override fun onClick(v: View?) {
         when(v!!.id) {
             R.id.et_date -> {
