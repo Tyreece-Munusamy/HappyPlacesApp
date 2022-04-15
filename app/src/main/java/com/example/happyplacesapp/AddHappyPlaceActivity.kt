@@ -4,12 +4,15 @@ import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Gallery
 import android.widget.TextView
@@ -25,9 +28,9 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import java.io.IOError
-import java.io.IOException
+import java.io.*
 import java.lang.Exception
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +39,7 @@ class AddHappyPlaceActivity : AppCompatActivity() , View.OnClickListener {
     companion object{
         private const val GALLERY = 1
         private const val CAMERA = 2
+        private const val IMAGE_DIRECTORY = "HappyPlacesImages"
     }
 
     private var calendar = Calendar.getInstance()
@@ -158,6 +162,8 @@ class AddHappyPlaceActivity : AppCompatActivity() , View.OnClickListener {
                         val contentURI = data.data
                         try {
                             val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
+                            val saveImageToInternalStory = saveImageToInternalStory(selectedImageBitmap)
+                            Log.e("Saved image: ", "$saveImageToInternalStory")
                             findViewById<AppCompatImageView>(R.id.iv_place_image).setImageBitmap(selectedImageBitmap)
                         } catch (e : IOException) {
                             e.printStackTrace()
@@ -167,6 +173,8 @@ class AddHappyPlaceActivity : AppCompatActivity() , View.OnClickListener {
                 }
                 CAMERA -> {
                     val thumbnail : Bitmap = data!!.extras!!.get("data") as Bitmap
+                    val saveImageToInternalStory = saveImageToInternalStory(thumbnail)
+                    Log.e("Saved image: ", "$saveImageToInternalStory")
                     findViewById<AppCompatImageView>(R.id.iv_place_image).setImageBitmap(thumbnail)
                 }
             }
@@ -190,6 +198,23 @@ class AddHappyPlaceActivity : AppCompatActivity() , View.OnClickListener {
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
             }.show()
+    }
+
+    private fun saveImageToInternalStory(bitmap: Bitmap) : Uri? {
+        val wrapper  = ContextWrapper(applicationContext)
+        var file = wrapper.getDir(IMAGE_DIRECTORY, Context.MODE_PRIVATE)
+        file = File(file, "${UUID.randomUUID()}.jpg")
+
+        try {
+            val stream : OutputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            stream.flush()
+            stream.close()
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return Uri.parse(file.absolutePath)
     }
 
 }
